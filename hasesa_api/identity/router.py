@@ -138,10 +138,12 @@ async def google_callback(
     except sessions.AuthError as e:
         await db.commit()
         raise HTTPException(status_code=400, detail="This sign-in link expired. Please try again.") from e
+    # Copy what the redirect needs now: a rollback below would expire `req`.
+    redirect_uri, client_state = req.redirect_uri, req.client_state
     await db.commit()  # the request is single-use, whatever happens next
 
     def back(**params: str | None) -> RedirectResponse:
-        res = RedirectResponse(_with_query(req.redirect_uri, {**params, "state": req.client_state}), status_code=302)
+        res = RedirectResponse(_with_query(redirect_uri, {**params, "state": client_state}), status_code=302)
         res.delete_cookie(REQUEST_COOKIE, path=COOKIE_PATH)
         return res
 
