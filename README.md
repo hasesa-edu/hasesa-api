@@ -21,6 +21,8 @@ hasesa_api/
   access.py    access levels (signed-in, enrolled, guide)
   health/      /v1/health (liveness), /v1/health/ready (database)
   identity/    Hasesa Accounts: Google sign-in, tokens, sessions, /v1/me
+  content/     course content: loader, validation and endpoints (see below)
+content/       the modules and concept units, as Markdown (content/README.md)
 alembic/       migrations
 tests/
 docs/          setup guides, and how apps sign in (docs/accounts.md)
@@ -56,6 +58,26 @@ The baseline migration (`0001`) adopts the database the web app built: on an
 existing database it changes nothing, and on an empty one it creates the
 full schema. CI builds the schema from scratch and runs `alembic check` to
 confirm the models and migrations agree.
+
+## Content
+
+`content/` is loaded and validated once per instance; a bad file fails the
+tests in CI with the file and field named. Endpoints, with the website's
+access rules enforced here:
+
+| Endpoint | Who |
+|---|---|
+| `GET /v1/modules`, `/v1/modules/{id}`, `/v1/concepts`, `/v1/search-index` | anyone (CDN-cached) |
+| `GET /v1/concepts/{id}` | anyone if the unit is public, otherwise enrolled students and guides |
+| `GET /v1/modules/{id}/steps/{step}` | enrolled students and guides |
+| `GET /v1/modules/{id}/guide` | guides |
+| `GET /v1/content/bundle` | the website's server only (HTTP Basic with its client secret); includes answers |
+| `GET /v1/content/version` | anyone: the deployed commit and a content hash |
+
+Problem answers and explanations are never sent to apps. After a push to
+`main` that changes content, the `Content live` workflow waits for the deploy
+and asks the website to refresh its cache (secrets `WEB_REVALIDATE_URL` and
+`REVALIDATE_SECRET`); the website also refreshes every hour on its own.
 
 ## Deploy
 

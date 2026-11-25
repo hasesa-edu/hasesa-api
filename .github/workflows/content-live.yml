@@ -1,0 +1,43 @@
+name: Content live
+
+# After a push to main, wait until Vercel serves this commit, then tell the
+# website to drop its cached copy of the content so new lessons show up within
+# a minute or two. The website also refreshes on its own every hour, so a
+# failure here only delays content, it never breaks the site.
+
+on:
+  push:
+    branches: [main]
+    paths: ["content/**", "hasesa_api/content/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: content-live
+  cancel-in-progress: true
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      API_URL: https://hasesa-api.vercel.app
+      WEB_REVALIDATE_URL: ${{ secrets.WEB_REVALIDATE_URL }}
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+    steps:
+      - name: Skip until the website's revalidate secret is set
+        if: env.WEB_REVALIDATE_URL == '' || env.REVALIDATE_SECRET == ''
+        run: echo "WEB_REVALIDATE_URL or REVALIDATE_SECRET is not set; the website refreshes hourly instead."
+      - name: Wait for the deploy, then revalidate
+        if: env.WEB_REVALIDATE_URL != '' && env.REVALIDATE_SECRET != ''
+        run: |
+          for i in $(seq 1 60); do
+            live=$(curl -fsS "$API_URL/v1/content/version" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit") or "")' || true)
+            if [ "$live" = "$GITHUB_SHA" ]; then
+              echo "API is serving $GITHUB_SHA"
+              curl -fsS -X POST "$WEB_REVALIDATE_URL" -H "Authorization: Bearer $REVALIDATE_SECRET"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "The API did not serve $GITHUB_SHA within 10 minutes" >&2
+          exit 1

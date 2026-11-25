@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
 
-from hasesa_api.db import DbDep
+from hasesa_api.db import DbDep, get_sessionmaker
 from hasesa_api.identity import sessions, tokens
 from hasesa_api.models import User
 
@@ -33,3 +33,25 @@ async def current_user(claims: ClaimsDep, db: DbDep) -> User:
 
 
 CurrentUserDep = Annotated[User, Depends(current_user)]
+
+
+def optional_bearer_claims(authorization: Annotated[str | None, Header()] = None) -> tokens.AccessClaims | None:
+    """Like bearer_claims, but signed-out callers get None instead of a 401."""
+    if not authorization:
+        return None
+    return bearer_claims(authorization)
+
+
+async def optional_user(
+    claims: Annotated[tokens.AccessClaims | None, Depends(optional_bearer_claims)],
+) -> User | None:
+    """Opens a database session only when a token was sent, so public requests never touch the database."""
+    if claims is None:
+        return None
+    async with get_sessionmaker()() as db:
+        user = await current_user(claims, db)
+        db.expunge(user)
+        return user
+
+
+OptionalUserDep = Annotated[User | None, Depends(optional_user)]

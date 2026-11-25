@@ -322,3 +322,59 @@ async def test_tables_exist(api) -> None:
         clients = (await s.execute(text("SELECT id FROM oauth_clients ORDER BY id"))).scalars().all()
         assert clients == ["hasesa-mobile", "hasesa-web"]
         assert (await s.scalar(select(AuthSession.id).limit(1))) is None
+
+
+# ---------- content access (phase 2) ----------
+
+
+async def _set_user(**values) -> None:
+    async with db.get_sessionmaker()() as s:
+        await s.execute(update(User).values(**values))
+        await s.commit()
+
+
+async def test_enrolled_student_opens_steps_and_locked_units_but_not_the_guide(api, fake_google) -> None:
+    from hasesa_api.content.loader import get_content
+
+    fake_google["tok"] = profile()
+    t = await sign_in(api, "tok")
+    c = get_content()
+    m = c.modules[0]
+    locked = next(x for x in c.concepts.values() if not x.public)
+
+    step = await api.get(f"/v1/modules/{m.id}/steps/{m.steps[1].id}", headers=bearer(t))
+    assert step.status_code == 200, step.text
+    assert step.json()["index"] == 1 and step.json()["body"]
+    assert step.headers["cache-control"] == "private, no-store"
+    unit = await api.get(f"/v1/concepts/{locked.id}", headers=bearer(t))
+    assert unit.status_code == 200
+    assert "answer" not in unit.text and "explanation" not in unit.text
+    assert (await api.get(f"/v1/modules/{m.id}/guide", headers=bearer(t))).status_code == 403
+
+    # Access ended: steps lock again.
+    await _set_user(paid_until=datetime(2020, 1, 1, tzinfo=UTC))
+    assert (await api.get(f"/v1/modules/{m.id}/steps/{m.steps[1].id}", headers=bearer(t))).status_code == 403
+    assert (await api.get(f"/v1/concepts/{locked.id}", headers=bearer(t))).status_code == 403
+
+
+async def test_guide_sees_the_guide_version(api, fake_google) -> None:
+    from hasesa_api.content.loader import get_content
+
+    fake_google["tok"] = profile()
+    t = await sign_in(api, "tok")
+    await _set_user(role="guide", paid_until=None)
+    m = get_content().modules[0]
+    r = await api.get(f"/v1/modules/{m.id}/guide", headers=bearer(t))
+    assert r.status_code == 200
+    assert r.json()["guide"] == m.guide
+    assert (await api.get(f"/v1/modules/{m.id}/steps/{m.steps[0].id}", headers=bearer(t))).status_code == 200
+
+
+async def test_signed_out_session_cannot_open_steps(api, fake_google) -> None:
+    from hasesa_api.content.loader import get_content
+
+    fake_google["tok"] = profile()
+    t = await sign_in(api, "tok")
+    await api.post("/v1/auth/logout", json={"refresh_token": t["refresh_token"]})
+    m = get_content().modules[0]
+    assert (await api.get(f"/v1/modules/{m.id}/steps/{m.steps[0].id}", headers=bearer(t))).status_code == 401

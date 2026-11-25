@@ -13,6 +13,7 @@ dependencies = [
   "alembic>=1.14,<2",
   "pyjwt[crypto]>=2.10",
   "httpx>=0.28",
+  "ruamel-yaml>=0.18",
 ]
 
 [dependency-groups]
