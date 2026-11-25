@@ -5,6 +5,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from hasesa_api.config import get_settings
 
@@ -36,14 +37,17 @@ def get_engine() -> AsyncEngine:
     if not settings.database_url:
         raise RuntimeError("DATABASE_URL is not set")
     url, ssl = to_asyncpg_url(settings.database_url)
+    # Neon's pooler (PgBouncer, transaction mode) can't keep prepared
+    # statements across transactions, so turn the statement cache off.
+    connect_args = {"ssl": ssl, "statement_cache_size": 0}
+    if settings.db_null_pool:
+        return create_async_engine(url, poolclass=NullPool, connect_args=connect_args)
     return create_async_engine(
         url,
         pool_size=settings.db_pool_size,
         max_overflow=settings.db_max_overflow,
         pool_pre_ping=True,
-        # Neon's pooler (PgBouncer, transaction mode) can't keep prepared
-        # statements across transactions, so turn the statement cache off.
-        connect_args={"ssl": ssl, "statement_cache_size": 0},
+        connect_args=connect_args,
     )
 
 
