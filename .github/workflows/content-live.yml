@@ -1,0 +1,42 @@
+name: Content live
+
+# After a push to main that changes content, wait until Vercel serves this
+# commit, then rebuild the website (a Vercel deploy hook). The website's build
+# downloads the content bundle, so new lessons go live a few minutes later. If
+# anything fails, the website keeps serving the content it already has.
+
+on:
+  push:
+    branches: [main]
+    paths: ["content/**", "hasesa_api/content/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: content-live
+  cancel-in-progress: true
+
+jobs:
+  rebuild-website:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      API_URL: https://hasesa-api.vercel.app
+      WEB_DEPLOY_HOOK_URL: ${{ secrets.WEB_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Skip until the website's deploy hook is set
+        if: env.WEB_DEPLOY_HOOK_URL == ''
+        run: echo "WEB_DEPLOY_HOOK_URL is not set; redeploy the website by hand to publish content."
+      - name: Wait for the API deploy, then rebuild the website
+        if: env.WEB_DEPLOY_HOOK_URL != ''
+        run: |
+          for i in $(seq 1 60); do
+            live=$(curl -fsS "$API_URL/v1/content/version" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit") or "")' || true)
+            if [ "$live" = "$GITHUB_SHA" ]; then
+              echo "API is serving $GITHUB_SHA"
+              curl -fsS -X POST "$WEB_DEPLOY_HOOK_URL"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "The API did not serve $GITHUB_SHA within 10 minutes" >&2
+          exit 1
