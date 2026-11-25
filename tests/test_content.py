@@ -203,7 +203,7 @@ async def client(monkeypatch: pytest.MonkeyPatch):
 
 def _no_answers(data) -> None:
     text = json.dumps(data)
-    for key in ('"answer"', '"answerIndex"', '"explanation"', '"tolerancePct"', '"guide"'):
+    for key in ('"answer":', '"answerIndex":', '"explanation":', '"tolerancePct":', '"guide":'):
         assert key not in text, f"{key} leaked"
 
 

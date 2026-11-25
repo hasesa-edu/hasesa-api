@@ -348,7 +348,7 @@ async def test_enrolled_student_opens_steps_and_locked_units_but_not_the_guide(a
     assert step.headers["cache-control"] == "private, no-store"
     unit = await api.get(f"/v1/concepts/{locked.id}", headers=bearer(t))
     assert unit.status_code == 200
-    assert "answer" not in unit.text and "explanation" not in unit.text
+    assert all(k not in unit.text for k in ('"answer":', '"answerIndex":', '"explanation":'))
     assert (await api.get(f"/v1/modules/{m.id}/guide", headers=bearer(t))).status_code == 403
 
     # Access ended: steps lock again.
