@@ -1,7 +1,9 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
+from typing import Annotated
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from hasesa_api.config import get_settings
@@ -54,3 +56,6 @@ async def get_db() -> AsyncIterator[AsyncSession]:
     """FastAPI dependency: one session per request."""
     async with get_sessionmaker()() as session:
         yield session
+
+
+DbDep = Annotated[AsyncSession, Depends(get_db)]

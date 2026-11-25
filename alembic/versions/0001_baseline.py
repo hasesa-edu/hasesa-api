@@ -32,7 +32,8 @@ def _ts(name: str, *, default_now: bool = False, nullable: bool = True) -> sa.Co
 
 
 def _user_fk(name: str, *, cascade: bool = True) -> sa.Column:
-    return sa.Column(name, sa.Text(), sa.ForeignKey("users.id", ondelete="CASCADE" if cascade else None), nullable=False)
+    fk = sa.ForeignKey("users.id", ondelete="CASCADE" if cascade else None)
+    return sa.Column(name, sa.Text(), fk, nullable=False)
 
 
 def upgrade() -> None:
@@ -52,9 +53,7 @@ def upgrade() -> None:
         sa.Column("school", sa.Text()),
         sa.Column("under_18", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("extended_retention", sa.Boolean(), nullable=False, server_default=sa.text("false")),
-        sa.Column(
-            "subjects", postgresql.ARRAY(sa.Text()), nullable=False, server_default=sa.text("'{}'::text[]")
-        ),
+        sa.Column("subjects", postgresql.ARRAY(sa.Text()), nullable=False, server_default=sa.text("'{}'::text[]")),
         sa.Column("grade", sa.Integer()),
         sa.Column("role", sa.Text(), nullable=False, server_default=sa.text("'student'")),
         _ts("paid_until"),
@@ -87,9 +86,7 @@ def upgrade() -> None:
     op.create_table(
         "messages",
         sa.Column("id", sa.Text(), primary_key=True),
-        sa.Column(
-            "conversation_id", sa.Text(), sa.ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
-        ),
+        sa.Column("conversation_id", sa.Text(), sa.ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False),
         sa.Column("role", sa.Text(), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
         _ts("created_at", default_now=True),

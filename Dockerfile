@@ -3,10 +3,10 @@ COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 # Install dependencies first so code changes don't invalidate this layer.
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --no-dev --no-install-project
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
 COPY . .
-RUN uv sync --no-dev
+RUN uv sync --locked --no-dev
 
 FROM python:3.12-slim-bookworm
 WORKDIR /app

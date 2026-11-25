@@ -26,10 +26,13 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+# Agent skills copied from installed libraries (library-skills); not our code.
+extend-exclude = [".agents", ".claude"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "ASYNC"]

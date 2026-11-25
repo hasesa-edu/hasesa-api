@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from hasesa_api.db import get_db
+from hasesa_api.db import DbDep
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -12,14 +11,14 @@ class Health(BaseModel):
     status: str
 
 
-@router.get("", response_model=Health)
+@router.get("")
 async def liveness() -> Health:
     """The process is up. Does not touch the database."""
     return Health(status="ok")
 
 
-@router.get("/ready", response_model=Health)
-async def readiness(db: AsyncSession = Depends(get_db)) -> Health:
+@router.get("/ready")
+async def readiness(db: DbDep) -> Health:
     """The process can reach the database."""
     try:
         await db.execute(text("SELECT 1"))
