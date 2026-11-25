@@ -1,0 +1,35 @@
+name: Migrate
+
+# Applies database migrations to production on every push to main. Vercel
+# deploys the code itself; migrations must stay additive (expand first,
+# contract later) because the new code and the migration go live at about the
+# same time, and the web app shares the database.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL_DIRECT: ${{ secrets.DATABASE_URL_DIRECT }}
+    steps:
+      - name: Skip until the database secret is set
+        if: env.DATABASE_URL_DIRECT == ''
+        run: echo "DATABASE_URL_DIRECT is not set; nothing to migrate."
+      - uses: actions/checkout@v4
+        if: env.DATABASE_URL_DIRECT != ''
+      - uses: astral-sh/setup-uv@v5
+        if: env.DATABASE_URL_DIRECT != ''
+      - if: env.DATABASE_URL_DIRECT != ''
+        run: |
+          uv sync --locked --no-dev
+          uv run alembic current
+          uv run alembic upgrade head
+          uv run alembic current

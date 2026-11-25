@@ -1,0 +1,12 @@
+.agents
+.claude
+.github
+.venv
+.env
+.env.*
+tests
+docs
+alembic
+alembic.ini
+Dockerfile
+.dockerignore

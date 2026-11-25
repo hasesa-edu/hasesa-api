@@ -17,6 +17,11 @@ class Settings(BaseSettings):
 
     db_pool_size: int = 5
     db_max_overflow: int = 5
+    # Open a fresh connection per request instead of keeping a pool. Safer on
+    # serverless hosts (Vercel), where an instance can be frozen between
+    # requests and pooled connections go stale. Neon's pooler keeps the
+    # actual Postgres connections warm, so the cost is one short TLS handshake.
+    db_null_pool: bool = False
 
     # NoDecode: read a plain comma-separated string, not JSON.
     cors_origins: Annotated[list[str], NoDecode] = []

@@ -24,6 +24,9 @@ dev = [
 [tool.uv]
 package = false
 
+[tool.vercel]
+entrypoint = "hasesa_api.main:app"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
