@@ -260,3 +260,76 @@ class UnitAssignment(Base):
     note: Mapped[str | None] = mapped_column(Text)
     guide_id: Mapped[str] = mapped_column(Text, _user_fk(cascade=False), nullable=False)
     created_at: Mapped[datetime] = _now()
+
+
+# ---------- Hasesa Accounts ----------
+
+
+class OAuthClient(Base):
+    """An app allowed to use Hasesa sign-in: the website, the mobile app, future products."""
+
+    __tablename__ = "oauth_clients"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    # web: browser redirect flow. native: sends a Google ID token (mobile apps).
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    # Confidential clients (a server) must send their secret (CLIENT_SECRETS) to redeem a code.
+    confidential: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    # Exact URLs, or with one "*" standing for letters, digits and "-" (preview deploys).
+    redirect_uris: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, server_default=text("'{}'::text[]"))
+    # Sliding session length: each refresh extends the session by this much.
+    session_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = _now()
+
+
+class AuthSession(Base):
+    """One signed-in device or browser. Refresh tokens point at it."""
+
+    __tablename__ = "auth_sessions"
+    __table_args__ = (Index("auth_sessions_user_idx", "user_id"),)
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    user_id: Mapped[str] = mapped_column(Text, _user_fk(), nullable=False)
+    client_id: Mapped[str] = mapped_column(Text, ForeignKey("oauth_clients.id"), nullable=False)
+    # Bumped on every refresh; only the current refresh token works.
+    generation: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    rotated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = _now()
+    last_used_at: Mapped[datetime] = _now()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    user_agent: Mapped[str | None] = mapped_column(Text)
+
+
+class AuthRequest(Base):
+    """A browser sign-in in progress, between our redirect to Google and Google's callback."""
+
+    __tablename__ = "auth_requests"
+
+    # Also the "state" sent to Google.
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    client_id: Mapped[str] = mapped_column(Text, ForeignKey("oauth_clients.id"), nullable=False)
+    redirect_uri: Mapped[str] = mapped_column(Text, nullable=False)
+    client_state: Mapped[str | None] = mapped_column(Text)
+    code_challenge: Mapped[str] = mapped_column(Text, nullable=False)
+    google_verifier: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = _now()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AuthCode(Base):
+    """A one-time code handed to the client after sign-in, redeemed for tokens."""
+
+    __tablename__ = "auth_codes"
+
+    # SHA-256 of the code; the code itself is never stored.
+    code_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    user_id: Mapped[str] = mapped_column(Text, _user_fk(), nullable=False)
+    client_id: Mapped[str] = mapped_column(Text, ForeignKey("oauth_clients.id"), nullable=False)
+    redirect_uri: Mapped[str] = mapped_column(Text, nullable=False)
+    code_challenge: Mapped[str] = mapped_column(Text, nullable=False)
+    is_new_user: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    created_at: Mapped[datetime] = _now()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
