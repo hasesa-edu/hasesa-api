@@ -1,0 +1,70 @@
+name: Deploy
+
+# Builds the image, runs database migrations, and deploys to Cloud Run.
+# Does nothing until the GCP repository variables are set (docs/gcp-setup.md).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.GCP_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # keyless sign-in to GCP (Workload Identity Federation)
+    env:
+      REGION: ${{ vars.GCP_REGION }}
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/hasesa/hasesa-api:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push image
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Run migrations
+        env:
+          DATABASE_URL_DIRECT: ${{ secrets.DATABASE_URL_DIRECT }}
+        run: |
+          uv sync --no-dev
+          uv run alembic upgrade head
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy hasesa-api \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --service-account "${{ vars.GCP_RUNTIME_SA }}" \
+            --allow-unauthenticated \
+            --concurrency 80 \
+            --cpu 1 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 10 \
+            --timeout 300 \
+            --set-env-vars "ENVIRONMENT=production,DB_POOL_SIZE=5,DB_MAX_OVERFLOW=5" \
+            --set-secrets "DATABASE_URL=database-url:latest"
+
+      - name: Smoke test
+        run: |
+          URL=$(gcloud run services describe hasesa-api --region "$REGION" --format 'value(status.url)')
+          curl -fsS "$URL/v1/health"
+          curl -fsS "$URL/v1/health/ready"

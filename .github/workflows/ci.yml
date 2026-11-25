@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  migrations:
+    # Builds the schema from scratch with Alembic, then checks the models
+    # and the migrations describe exactly the same schema.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hasesa
+          POSTGRES_PASSWORD: hasesa
+          POSTGRES_DB: hasesa
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hasesa"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL_DIRECT: postgresql://hasesa:hasesa@localhost:5432/hasesa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - run: uv run alembic upgrade head
+      - run: uv run alembic check
