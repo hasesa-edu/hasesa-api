@@ -74,10 +74,10 @@ access rules enforced here:
 | `GET /v1/content/bundle` | the website's server only (HTTP Basic with its client secret); includes answers |
 | `GET /v1/content/version` | anyone: the deployed commit and a content hash |
 
-Problem answers and explanations are never sent to apps. After a push to
-`main` that changes content, the `Content live` workflow waits for the deploy
-and asks the website to refresh its cache (secrets `WEB_REVALIDATE_URL` and
-`REVALIDATE_SECRET`); the website also refreshes every hour on its own.
+Problem answers and explanations are never sent to apps. The website
+downloads the bundle when it builds. After a push to `main` that changes
+content, the `Content live` workflow waits for the API deploy and rebuilds the
+website through a Vercel deploy hook (secret `WEB_DEPLOY_HOOK_URL`).
 
 ## Deploy
 
