@@ -18,10 +18,12 @@ hasesa_api/
   config.py    settings from environment variables
   db.py        async engine and per-request session
   models.py    database tables (Alembic owns the schema)
+  access.py    access levels (signed-in, enrolled, guide)
   health/      /v1/health (liveness), /v1/health/ready (database)
+  identity/    Hasesa Accounts: Google sign-in, tokens, sessions, /v1/me
 alembic/       migrations
 tests/
-docs/          setup guides
+docs/          setup guides, and how apps sign in (docs/accounts.md)
 ```
 
 New domains (identity, content, learning, guide, billing, ai, analytics,
@@ -37,6 +39,8 @@ uv run pytest
 ```
 
 Use a **Neon branch** for local work, never the production database.
+Database tests are skipped unless `TEST_DATABASE_URL` points at a throwaway
+database (they empty its tables); CI runs them against a fresh Postgres.
 
 ## Database
 

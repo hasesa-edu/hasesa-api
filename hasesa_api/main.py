@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from hasesa_api.config import get_settings
 from hasesa_api.db import get_engine
 from hasesa_api.health.router import router as health_router
+from hasesa_api.identity.router import router as identity_router
+from hasesa_api.identity.router import well_known
 
 
 @asynccontextmanager
@@ -39,7 +41,9 @@ def create_app() -> FastAPI:
 
     v1 = APIRouter(prefix="/v1")
     v1.include_router(health_router)
+    v1.include_router(identity_router)
     app.include_router(v1)
+    app.include_router(well_known)
     return app
 
 
