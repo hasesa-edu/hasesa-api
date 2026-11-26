@@ -26,6 +26,7 @@ hasesa_api/
   guide/       the guide's tracker and tools (feedback, assignments, flags, sign-offs)
   admin/       admin tools (enrol by hand, set roles, subscribers)
   billing/     Chapa checkout, payment checks, webhook, enrolment days
+  ai/          the lab assistant: page context, prompt, streaming, daily caps
 content/       the modules and concept units, as Markdown (content/README.md)
 alembic/       migrations
 tests/
@@ -125,6 +126,23 @@ and claiming a payment is idempotent on `tx_ref`, so the website's old webhook
 can run alongside this one. Set `CHAPA_SECRET_KEY` and `CHAPA_WEBHOOK_SECRET`
 (test key on Preview, live key on Production); the Chapa dashboard's webhook
 URL is `<API_BASE_URL>/v1/billing/chapa/webhook`.
+
+## Lab assistant
+
+`POST /v1/chat` (enrolled students and guides) streams Server-Sent Events:
+`meta` (`conversationId`, `remaining`) first, then `delta` (`text`) pieces, then
+`done`, or `error` if the provider breaks mid-answer. Problems before the
+answer starts are normal JSON errors; `X-Error-Code` says `enrol` or
+`daily_cap` where a client should react.
+
+Limits: 30 messages a day (Addis Ababa days, the `usage` table) and at most 20
+in any 5 minutes, counted from the student's own saved messages so it holds
+across every instance. A message the provider never answered is refunded.
+
+`GET /v1/chat/thread?context=`, `GET /v1/chat/conversations`,
+`GET|DELETE /v1/chat/conversations/{id}` read and delete history (90 days, or
+365 with extended retention). Set `AI_API_KEY` (and optionally `AI_BASE_URL`,
+`AI_MODEL`, `AI_REASONING_EFFORT`); the old `GROQ_*` names also work.
 
 ## Deploy
 
