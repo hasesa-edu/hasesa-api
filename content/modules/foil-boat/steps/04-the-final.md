@@ -3,6 +3,7 @@ title: The final
 kind: finish
 minutes: 25
 units: [density, pressure, forces-and-motion]
+video: { youtubeId: "6E0bT6B5Zm4", credit: "marineinsight" }
 summary: "Race your best boat in the class final, compare every team's prediction with its result, and explain why real ships have wide hulls and a load line."
 ---
 ## Do: the final (10 minutes)

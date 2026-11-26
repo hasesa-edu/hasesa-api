@@ -3,6 +3,7 @@ title: Cold buna
 kind: hook
 minutes: 15
 units: [heat-transfer]
+video: { youtubeId: "7ETI-FIzfks", credit: "ScienceWorld" }
 summary: "Learn the hot-water rules, feel the difference between a cup and a thermos of the same hot water, and predict how the thermos keeps heat in."
 ---
 ## The hot-water rules first

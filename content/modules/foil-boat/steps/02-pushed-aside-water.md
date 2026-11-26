@@ -3,6 +3,7 @@ title: Pushed-aside water
 kind: investigate
 minutes: 35
 units: [density, forces-and-motion]
+video: { youtubeId: "ROXYr_SzNW4", credit: "KClassScienceChannel" }
 summary: "Catch and weigh the water that a floating bottle pushes aside, compare it with the bottle's mass, and learn about density and upthrust."
 ---
 ## Do: catch the pushed-aside water (15 minutes)

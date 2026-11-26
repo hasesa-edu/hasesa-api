@@ -7,6 +7,7 @@ hook: "The guide blacks out a room and makes one tiny hole in the window cover. 
 goal: "Build a pinhole camera, find out how the size of the hole and the length of the camera change the picture, and use similar triangles to measure the height of something tall on the school compound."
 whatYouBuild: "A sliding-tube pinhole camera from card, foil and tracing paper, with a centimetre scale on its screen for measuring images."
 hours: 2
+trailer: { youtubeId: "gvzpu0Q9RTU", credit: "National Geographic" }
 status: ai-draft
 publicSample: light-and-images
 materials:

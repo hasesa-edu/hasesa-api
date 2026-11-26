@@ -3,6 +3,7 @@ title: Where does the heat go?
 kind: investigate
 minutes: 35
 units: [heat-transfer]
+video: { youtubeId: "HpCvWuvCUoA", credit: "MooMooMath and Science" }
 summary: "Use spoons, lids, foil and black paper to find the four ways heat escapes from a hot cup: conduction, convection, radiation and evaporation."
 ---
 ## Do: three quick tests (20 minutes)

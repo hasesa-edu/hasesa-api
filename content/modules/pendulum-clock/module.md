@@ -7,6 +7,7 @@ hook: "Your guide hangs a padlock on a string and sets it swinging next to a pho
 goal: "Find out by fair tests what changes a pendulum's swing time, then tune your own pendulum so it ticks once every second, and check it against a phone stopwatch."
 whatYouBuild: "A seconds pendulum: a steel nut on a string, clipped to a stick, about 1 m long, that ticks once a second (one full swing, there and back, every 2 seconds). Plus a graph that lets you predict the length for any tick."
 hours: 2
+trailer: { youtubeId: "yVkdfJ9PkRQ", credit: "Harvard Natural Sciences Lecture Demonstrations" }
 status: ai-draft
 publicSample: fair-tests
 materials:

@@ -3,6 +3,7 @@ title: Levers everywhere
 kind: finish
 minutes: 25
 units: [levers-and-moments]
+video: { youtubeId: "MWHRVnQ9O4I", credit: "Next Generation Science" }
 summary: "Find the pivot, load and effort in scissors, a wheelbarrow, a bottle opener and your own arm, sort them into classes, and solve the mystery."
 ---
 ## Theory: three classes of lever

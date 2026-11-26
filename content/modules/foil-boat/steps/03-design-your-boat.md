@@ -3,6 +3,7 @@ title: Design your boat
 kind: build
 minutes: 45
 units: [pressure, density]
+video: { youtubeId: "McNdj_F8jUE", credit: "STEM4all" }
 summary: "Fold a boat from one 20 cm square of foil, use its size to predict how many coins it can carry, then load it coin by coin to test your prediction."
 ---
 ## The challenge

@@ -7,6 +7,7 @@ hook: "Pour a cup of buna and leave it on the table: in half an hour it's lukewa
 goal: "Find the ways heat escapes from a hot drink, insulate a cup of hot water with cheap materials, and prove with a fair test and a cooling graph how much heat your design keeps in."
 whatYouBuild: "An insulated cup wrapped in materials your team chooses (cloth, newspaper, foil, cotton, straw, a lid), plus a temperature log and cooling graph comparing it with an unwrapped control cup."
 hours: 2
+trailer: { youtubeId: "Yg8kXf_HKtU", credit: "Teach Engineering" }
 status: ai-draft
 publicSample: heat-transfer
 materials:

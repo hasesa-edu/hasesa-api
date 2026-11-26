@@ -3,6 +3,7 @@ title: Tune it
 kind: build
 minutes: 45
 units: [graphs-and-relationships, free-fall-and-square-roots, frequency-and-period]
+video: { youtubeId: "02w9lSii_Hs", credit: "KClassScienceChannel" }
 summary: "Time five lengths, turn your results into a straight-line graph, use it to predict the length for a one-second tick, then tune your pendulum to match."
 ---
 ## Do: five lengths (15 minutes)

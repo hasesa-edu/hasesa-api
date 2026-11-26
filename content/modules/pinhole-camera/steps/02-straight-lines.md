@@ -3,6 +3,7 @@ title: Light in straight lines
 kind: investigate
 minutes: 35
 units: [light-and-images]
+video: { youtubeId: "hhWVJ4SmkF0", credit: "Physics with Simon Poliakoff" }
 summary: "Line up three cards with holes to show light travels in straight lines, make an upside-down F with a torch and a pinhole, and draw ray diagrams that explain it."
 ---
 ## Do: three cards and a torch (10 minutes)

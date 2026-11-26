@@ -7,6 +7,7 @@ hook: "A loop of copper wire sits over a magnet, held up by two paper clips on a
 goal: "Build a working electric motor from one battery, a magnet and a coil of wire, make it spin faster, and explain why a current in a magnetic field feels a push."
 whatYouBuild: "A simple DC motor: a coil of enamelled copper wire that spins on two paper-clip supports above a magnet, powered by one 1.5 V D cell."
 hours: 2
+trailer: { youtubeId: "q9VpXz01msM", credit: "Science Buddies" }
 status: ai-draft
 publicSample: electromagnetic-induction
 materials:

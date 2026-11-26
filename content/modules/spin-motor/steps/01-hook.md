@@ -3,6 +3,7 @@ title: The spinning coil
 kind: hook
 minutes: 15
 units: [electromagnetism]
+video: { youtubeId: "yqqx55ZcbfQ", credit: "Hungry SciANNtist" }
 summary: "Learn the motor safety rules, watch a loop of wire spin over a magnet with only one battery, and predict what makes it turn."
 ---
 ## The rules first

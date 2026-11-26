@@ -3,6 +3,7 @@ title: What sets the beat?
 kind: investigate
 minutes: 35
 units: [frequency-and-period, fair-tests]
+video: { youtubeId: "eBNPPz8bQzc", credit: "Jefferson Lab" }
 summary: "Run three quick fair tests to find out whether the mass, the size of the swing or the length changes a pendulum's period."
 ---
 ## Do: set up your pendulum (5 minutes)
