@@ -98,14 +98,15 @@ class UserRow(ApiModel):
 
 class StatsOut(ApiModel):
     users_total: int
-    users1d: int
-    users7d: int
-    users30d: int
+    # Explicit names: the camelCase generator would write "users1D".
+    users1d: int = Field(alias="users1d")
+    users7d: int = Field(alias="users7d")
+    users30d: int = Field(alias="users30d")
     pv_total: int
-    pv1d: int
-    pv7d: int
-    pv30d: int
-    unique_visitors7d: int
+    pv1d: int = Field(alias="pv1d")
+    pv7d: int = Field(alias="pv7d")
+    pv30d: int = Field(alias="pv30d")
+    unique_visitors7d: int = Field(alias="uniqueVisitors7d")
     top_paths: list[LabelCount]
     top_countries: list[LabelCount]
     top_referrers: list[LabelCount]
