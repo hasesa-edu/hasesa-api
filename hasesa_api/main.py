@@ -9,6 +9,7 @@ from hasesa_api.db import get_engine
 from hasesa_api.health.router import router as health_router
 from hasesa_api.identity.router import router as identity_router
 from hasesa_api.identity.router import well_known
+from hasesa_api.learning.router import router as learning_router
 
 
 @asynccontextmanager
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     v1.include_router(health_router)
     v1.include_router(identity_router)
     v1.include_router(content_router)
+    v1.include_router(learning_router)
     app.include_router(v1)
     app.include_router(well_known)
     return app

@@ -22,6 +22,7 @@ hasesa_api/
   health/      /v1/health (liveness), /v1/health/ready (database)
   identity/    Hasesa Accounts: Google sign-in, tokens, sessions, /v1/me
   content/     course content: loader, validation and endpoints (see below)
+  learning/    answers, test-outs, steps, enrolments, progress, certificates
 content/       the modules and concept units, as Markdown (content/README.md)
 alembic/       migrations
 tests/
@@ -78,6 +79,23 @@ Problem answers and explanations are never sent to apps. The website
 downloads the bundle when it builds. After a push to `main` that changes
 content, the `Content live` workflow waits for the API deploy and rebuilds the
 website through a Vercel deploy hook (secret `WEB_DEPLOY_HOOK_URL`).
+
+## Learning
+
+Answers are checked here (`learning/grade.py`, a port of the website's
+`grade.ts` that matches its number parsing and formatting exactly), so they
+never reach an app before the student has tried.
+
+| Endpoint | Who |
+|---|---|
+| `POST /v1/attempts`, `/v1/attempts/testout` | anyone on public units (not saved); enrolled students and guides on the rest (saved) |
+| `GET /v1/me/progress`, `/v1/me/attempts?unitId=` | the signed-in student |
+| `POST /v1/me/steps`, `/v1/me/enrollments` | enrolled students and guides |
+| `POST /v1/me/feedback/{id}/read` | the signed-in student (their own notes only) |
+| `GET /v1/certificates/{code}` | anyone |
+
+Error messages (`detail`) are the same as the website's, so it can pass them
+straight to students.
 
 ## Deploy
 
