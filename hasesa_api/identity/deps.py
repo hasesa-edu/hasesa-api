@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
 
+from hasesa_api.access import is_admin
 from hasesa_api.db import DbDep, get_sessionmaker
 from hasesa_api.identity import sessions, tokens
 from hasesa_api.models import User
@@ -55,3 +56,23 @@ async def optional_user(
 
 
 OptionalUserDep = Annotated[User | None, Depends(optional_user)]
+
+
+async def guide_user(user: CurrentUserDep) -> User:
+    """The signed-in guide. Everyone else gets a 403."""
+    if user.role != "guide":
+        raise HTTPException(status_code=403, detail="Only the guide can do this.")
+    return user
+
+
+GuideDep = Annotated[User, Depends(guide_user)]
+
+
+async def admin_user(user: CurrentUserDep) -> User:
+    """Someone who runs Hasesa (their email is in ADMIN_EMAILS)."""
+    if not is_admin(user.email):
+        raise HTTPException(status_code=403, detail="Not authorized.")
+    return user
+
+
+AdminDep = Annotated[User, Depends(admin_user)]

@@ -74,7 +74,7 @@ async def test_bad_attempts_get_the_websites_messages(api) -> None:
         r = await api.post("/v1/attempts", json=payload)
         assert (r.status_code, r.json()["detail"]) == (400, message)
     long = await api.post("/v1/attempts", json={"unitId": c.id, "questionId": q, "answer": "1" * 201})
-    assert long.status_code == 422
+    assert (long.status_code, long.json()["detail"]) == (400, "Enter an answer")
 
 
 async def test_practice_scores_first_tries_and_completes_the_unit(api, fake_google) -> None:

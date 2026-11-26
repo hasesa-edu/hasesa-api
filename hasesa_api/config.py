@@ -53,10 +53,20 @@ class Settings(BaseSettings):
     # Extra Google client IDs whose ID tokens are accepted (Android, iOS apps).
     google_native_client_ids: Annotated[list[str], NoDecode] = []
 
+    # Emails of the people who run Hasesa (comma-separated). They sign in with
+    # Google like everyone else and get the admin tools.
+    admin_emails: Annotated[list[str], NoDecode] = []
+
     @field_validator("cors_origins", "google_native_client_ids", mode="before")
     @classmethod
     def split_lists(cls, v: object) -> object:
         return _split_csv(v)
+
+    @field_validator("admin_emails", mode="before")
+    @classmethod
+    def split_emails(cls, v: object) -> object:
+        v = _split_csv(v)
+        return [e.lower() for e in v] if isinstance(v, list) else v
 
     @field_validator("client_secrets", mode="before")
     @classmethod
