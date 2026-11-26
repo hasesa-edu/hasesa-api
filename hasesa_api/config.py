@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Annotated, Literal
 
-from pydantic import field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -62,6 +62,14 @@ class Settings(BaseSettings):
     chapa_secret_key: str = ""
     # The webhook secret set in the Chapa dashboard (falls back to the secret key).
     chapa_webhook_secret: str = ""
+
+    # ---- Lab assistant: any OpenAI-compatible chat completions API (Groq by default) ----
+    # GROQ_* names are still read, as on the website.
+    ai_api_key: str = Field(default="", validation_alias=AliasChoices("AI_API_KEY", "GROQ_API_KEY"))
+    ai_base_url: str = "https://api.groq.com/openai/v1"
+    ai_model: str = Field(default="openai/gpt-oss-120b", validation_alias=AliasChoices("AI_MODEL", "GROQ_MODEL"))
+    # Only sent when set, since non-reasoning models reject it.
+    ai_reasoning_effort: str = ""
 
     @field_validator("cors_origins", "google_native_client_ids", mode="before")
     @classmethod
