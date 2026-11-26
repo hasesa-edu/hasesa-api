@@ -27,6 +27,8 @@ hasesa_api/
   admin/       admin tools (enrol by hand, set roles, subscribers)
   billing/     Chapa checkout, payment checks, webhook, enrolment days
   ai/          the lab assistant: page context, prompt, streaming, daily caps
+  analytics/   page views (recorded for the website's server) and the /admin stats
+  internal/    scheduled jobs (Vercel Cron)
 content/       the modules and concept units, as Markdown (content/README.md)
 alembic/       migrations
 tests/
@@ -143,6 +145,22 @@ across every instance. A message the provider never answered is refunded.
 `GET|DELETE /v1/chat/conversations/{id}` read and delete history (90 days, or
 365 with extended retention). Set `AI_API_KEY` (and optionally `AI_BASE_URL`,
 `AI_MODEL`, `AI_REASONING_EFFORT`); the old `GROQ_*` names also work.
+
+## Analytics and jobs
+
+`POST /v1/analytics/views` records a page view. Only the website's server can
+call it (HTTP Basic with its client ID and secret), because it passes the
+visitor's country and city from Vercel's headers and the signed-in user's id.
+`/admin` pages are never counted.
+
+`GET /v1/analytics/stats` (admins) returns sign-ups, traffic and engagement.
+Signed-in visits by accounts in `ADMIN_EMAILS` are left out unless
+`?includeAdmins=true`; visits made while signed out can't be told apart.
+
+`GET /v1/internal/cleanup` runs daily at 03:00 UTC from Vercel Cron
+(`vercel.json`): it deletes lab assistant messages past their retention (90
+days, or 365 with extended retention) and conversations left empty. Set
+`CRON_SECRET` on the Vercel project; without it the endpoint refuses every call.
 
 ## Deploy
 

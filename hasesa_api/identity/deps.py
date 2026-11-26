@@ -1,8 +1,11 @@
+import base64
+import hmac
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
 
 from hasesa_api.access import is_admin
+from hasesa_api.config import get_settings
 from hasesa_api.db import DbDep, get_sessionmaker
 from hasesa_api.identity import sessions, tokens
 from hasesa_api.models import User
@@ -76,3 +79,24 @@ async def admin_user(user: CurrentUserDep) -> User:
 
 
 AdminDep = Annotated[User, Depends(admin_user)]
+
+
+def confidential_client(authorization: Annotated[str | None, Header()] = None) -> str:
+    """HTTP Basic auth with a confidential client's ID and secret (the website's server).
+
+    Checked against CLIENT_SECRETS only, so the content endpoints never need the database.
+    """
+    scheme, _, encoded = (authorization or "").partition(" ")
+    try:
+        client_id, sep, secret = base64.b64decode(encoded, validate=True).decode().partition(":")
+    except ValueError:
+        client_id, sep, secret = "", "", ""
+    if scheme.lower() != "basic" or not sep:
+        raise HTTPException(status_code=401, detail="Client authentication required.")
+    expected = get_settings().client_secrets.get(client_id)
+    if not expected or not hmac.compare_digest(secret.encode(), expected.encode()):
+        raise HTTPException(status_code=401, detail="Client authentication failed.")
+    return client_id
+
+
+ClientDep = Annotated[str, Depends(confidential_client)]
