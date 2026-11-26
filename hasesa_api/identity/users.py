@@ -8,7 +8,7 @@ from sqlalchemy import and_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hasesa_api.access import PILOT_ENROLLED_UNTIL, access_level
+from hasesa_api.access import PILOT_ENROLLED_UNTIL, access_level, is_admin
 from hasesa_api.identity.google import GoogleProfile
 from hasesa_api.models import User
 from hasesa_api.schemas import ApiModel
@@ -35,6 +35,8 @@ class UserOut(ApiModel):
     paid_until: datetime | None
     role: Literal["student", "guide"]
     access: Literal["signed-in", "enrolled", "guide"]
+    # Runs Hasesa: sees the admin tools.
+    admin: bool = False
 
 
 class ProfilePatch(ApiModel):
@@ -120,6 +122,7 @@ def user_out(u: User) -> UserOut:
         paid_until=u.paid_until,
         role="guide" if u.role == "guide" else "student",
         access=level,  # type: ignore[arg-type]  # never "public" for a real user
+        admin=is_admin(u.email),
     )
 
 

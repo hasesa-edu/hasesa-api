@@ -32,7 +32,8 @@ LOCKED = "Enrol at the Academy to unlock this."
 class AttemptIn(ApiModel):
     unit_id: str = Field(max_length=200)
     question_id: str = Field(max_length=200)
-    answer: str = Field(max_length=service.MAX_ANSWER)
+    # Longer than 200 characters gets "Enter an answer", as on the website.
+    answer: str = Field(max_length=10_000)
 
 
 class UnitStateOut(ApiModel):
@@ -93,11 +94,11 @@ class EnrollOut(ApiModel):
     status: str
 
 
-class _Row(ApiModel):
+class RowModel(ApiModel):
     model_config = ApiModel.model_config | {"from_attributes": True}
 
 
-class EnrollmentRow(_Row):
+class EnrollmentRow(RowModel):
     user_id: str
     module_id: str
     status: str
@@ -108,7 +109,7 @@ class EnrollmentRow(_Row):
     flag_note: str | None
 
 
-class StepRow(_Row):
+class StepRow(RowModel):
     user_id: str
     module_id: str
     step_id: str
@@ -118,7 +119,7 @@ class StepRow(_Row):
     completed_at: datetime | None
 
 
-class UnitRow(_Row):
+class UnitRow(RowModel):
     user_id: str
     unit_id: str
     status: str
@@ -127,7 +128,7 @@ class UnitRow(_Row):
     completed_at: datetime | None
 
 
-class SignoffRow(_Row):
+class SignoffRow(RowModel):
     user_id: str
     module_id: str
     checks: list[str]
@@ -137,7 +138,7 @@ class SignoffRow(_Row):
     certificate_code: str
 
 
-class FeedbackRow(_Row):
+class FeedbackRow(RowModel):
     id: str
     student_id: str
     guide_id: str
@@ -148,7 +149,7 @@ class FeedbackRow(_Row):
     read_at: datetime | None
 
 
-class AssignmentRow(_Row):
+class AssignmentRow(RowModel):
     id: str
     student_id: str
     unit_id: str
@@ -157,7 +158,7 @@ class AssignmentRow(_Row):
     created_at: datetime
 
 
-class AttemptRow(_Row):
+class AttemptRow(RowModel):
     id: str
     user_id: str
     unit_id: str
@@ -221,7 +222,7 @@ async def attempt(body: AttemptIn, user: OptionalUserDep, db: DbDep) -> AttemptO
     problem = next((p for p in concept.problems if p.id == body.question_id), None)
     if problem is None:
         raise HTTPException(status_code=400, detail="Unknown question")
-    if not body.answer.strip():
+    if not body.answer.strip() or len(body.answer) > service.MAX_ANSWER:
         raise HTTPException(status_code=400, detail="Enter an answer")
     correct = is_correct(problem, body.answer)
     unit = await service.record_attempt(db, user.id, concept, problem, body.answer, correct) if user else None

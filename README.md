@@ -23,6 +23,9 @@ hasesa_api/
   identity/    Hasesa Accounts: Google sign-in, tokens, sessions, /v1/me
   content/     course content: loader, validation and endpoints (see below)
   learning/    answers, test-outs, steps, enrolments, progress, certificates
+  guide/       the guide's tracker and tools (feedback, assignments, flags, sign-offs)
+  admin/       admin tools (enrol by hand, set roles, subscribers)
+  billing/     payments and enrolment days
 content/       the modules and concept units, as Markdown (content/README.md)
 alembic/       migrations
 tests/
@@ -96,6 +99,18 @@ never reach an app before the student has tried.
 
 Error messages (`detail`) are the same as the website's, so it can pass them
 straight to students.
+
+## Guide and admin
+
+| Endpoint | Who |
+|---|---|
+| `GET /v1/guide/roster`, `/v1/guide/students/{id}` | guides (`users.role = 'guide'`) |
+| `POST /v1/guide/students/{id}/feedback`, `/assignments`, `/signoffs`; `PUT .../modules/{m}/flag`; `DELETE` assignments and sign-offs | guides |
+| `POST /v1/admin/enrolments`, `PUT /v1/admin/roles`, `GET /v1/admin/subscribers` | admins |
+
+Admins are the accounts whose email is in `ADMIN_EMAILS` (comma-separated).
+They sign in with Google like everyone else; `/v1/me` returns `admin: true`
+for them.
 
 ## Deploy
 

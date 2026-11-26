@@ -3,6 +3,8 @@
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Literal
 
+from hasesa_api.config import get_settings
+
 AccessLevel = Literal["public", "signed-in", "enrolled", "guide"]
 
 # Pilot: every account is enrolled at the Academy until the end of 2027
@@ -18,6 +20,11 @@ def access_level(role: str | None, paid_until: datetime | None, now: datetime | 
     if paid_until is not None and paid_until > now:
         return "enrolled"
     return "signed-in"
+
+
+def is_admin(email: str) -> bool:
+    """Admins are listed by email in ADMIN_EMAILS (no database role)."""
+    return email.strip().lower() in get_settings().admin_emails
 
 
 def has_full_access(level: AccessLevel) -> bool:
