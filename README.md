@@ -25,7 +25,7 @@ hasesa_api/
   learning/    answers, test-outs, steps, enrolments, progress, certificates
   guide/       the guide's tracker and tools (feedback, assignments, flags, sign-offs)
   admin/       admin tools (enrol by hand, set roles, subscribers)
-  billing/     payments and enrolment days
+  billing/     Chapa checkout, payment checks, webhook, enrolment days
 content/       the modules and concept units, as Markdown (content/README.md)
 alembic/       migrations
 tests/
@@ -111,6 +111,20 @@ straight to students.
 Admins are the accounts whose email is in `ADMIN_EMAILS` (comma-separated).
 They sign in with Google like everyone else; `/v1/me` returns `admin: true`
 for them.
+
+## Billing
+
+| Endpoint | Who |
+|---|---|
+| `POST /v1/billing/checkout` `{returnUrl}` | the signed-in student; `returnUrl` must be `<an origin the app signs in from>/billing/return` |
+| `GET /v1/billing/payments/{txRef}` | the payment's owner: verifies with Chapa, then returns the state |
+| `POST /v1/billing/chapa/webhook` | Chapa (signed); `GET` with `?trx_ref=` is Chapa's callback |
+
+Nothing Chapa sends is trusted on its own: each call triggers a fresh verify,
+and claiming a payment is idempotent on `tx_ref`, so the website's old webhook
+can run alongside this one. Set `CHAPA_SECRET_KEY` and `CHAPA_WEBHOOK_SECRET`
+(test key on Preview, live key on Production); the Chapa dashboard's webhook
+URL is `<API_BASE_URL>/v1/billing/chapa/webhook`.
 
 ## Deploy
 

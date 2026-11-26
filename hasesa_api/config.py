@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     # Google like everyone else and get the admin tools.
     admin_emails: Annotated[list[str], NoDecode] = []
 
+    # ---- Chapa payments ----
+    # Use the CHASECK_TEST-... key on Preview, the live key on Production.
+    chapa_secret_key: str = ""
+    # The webhook secret set in the Chapa dashboard (falls back to the secret key).
+    chapa_webhook_secret: str = ""
+
     @field_validator("cors_origins", "google_native_client_ids", mode="before")
     @classmethod
     def split_lists(cls, v: object) -> object:
