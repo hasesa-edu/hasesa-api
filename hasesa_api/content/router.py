@@ -6,19 +6,16 @@
 - problem answers and explanations: never (graded on the server)
 """
 
-import base64
 import hashlib
-import hmac
 import json
 import os
 from functools import lru_cache
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 from hasesa_api.access import access_level, has_full_access
-from hasesa_api.config import get_settings
 from hasesa_api.content.loader import (
     client_problems,
     concept_summary,
@@ -39,7 +36,7 @@ from hasesa_api.content.models import (
     StepKind,
     Video,
 )
-from hasesa_api.identity.deps import OptionalUserDep
+from hasesa_api.identity.deps import ClientDep, OptionalUserDep
 from hasesa_api.models import User
 
 router = APIRouter(tags=["content"])
@@ -139,24 +136,6 @@ def _require_full(user: User | None) -> None:
         raise HTTPException(status_code=403, detail="Enrol at the Academy to unlock this.")
 
 
-def confidential_client(authorization: Annotated[str | None, Header()] = None) -> str:
-    """HTTP Basic auth with a confidential client's ID and secret (the website's server).
-
-    Checked against CLIENT_SECRETS only, so the content endpoints never need the database.
-    """
-    scheme, _, encoded = (authorization or "").partition(" ")
-    try:
-        client_id, sep, secret = base64.b64decode(encoded, validate=True).decode().partition(":")
-    except ValueError:
-        client_id, sep, secret = "", "", ""
-    if scheme.lower() != "basic" or not sep:
-        raise HTTPException(status_code=401, detail="Client authentication required.")
-    expected = get_settings().client_secrets.get(client_id)
-    if not expected or not hmac.compare_digest(secret.encode(), expected.encode()):
-        raise HTTPException(status_code=401, detail="Client authentication failed.")
-    return client_id
-
-
 # ---------- the full bundle ----------
 
 
@@ -172,7 +151,7 @@ def _bundle() -> tuple[bytes, str]:
 
 
 @router.get("/content/bundle", responses={200: {"description": "All content, answers included."}})
-async def bundle(client_id: Annotated[str, Depends(confidential_client)]) -> Response:
+async def bundle(client_id: ClientDep) -> Response:
     """Everything, including answers and guide notes, for a trusted server (the website's build)."""
     raw, version = _bundle()
     return Response(raw, media_type="application/json", headers={"ETag": f'"{version}"', "Cache-Control": "no-store"})

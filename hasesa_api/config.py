@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # Only sent when set, since non-reasoning models reject it.
     ai_reasoning_effort: str = ""
 
+    # ---- Scheduled jobs ----
+    # Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" to the job endpoints.
+    cron_secret: str = ""
+
     @field_validator("cors_origins", "google_native_client_ids", mode="before")
     @classmethod
     def split_lists(cls, v: object) -> object:

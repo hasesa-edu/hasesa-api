@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from hasesa_api.admin.router import router as admin_router
 from hasesa_api.ai.router import router as ai_router
+from hasesa_api.analytics.router import router as analytics_router
 from hasesa_api.billing.router import router as billing_router
 from hasesa_api.config import get_settings
 from hasesa_api.content.router import router as content_router
@@ -13,6 +14,7 @@ from hasesa_api.guide.router import router as guide_router
 from hasesa_api.health.router import router as health_router
 from hasesa_api.identity.router import router as identity_router
 from hasesa_api.identity.router import well_known
+from hasesa_api.internal.router import router as internal_router
 from hasesa_api.learning.router import router as learning_router
 
 
@@ -54,6 +56,8 @@ def create_app() -> FastAPI:
     v1.include_router(admin_router)
     v1.include_router(billing_router)
     v1.include_router(ai_router)
+    v1.include_router(analytics_router)
+    v1.include_router(internal_router)
     app.include_router(v1)
     app.include_router(well_known)
     return app
