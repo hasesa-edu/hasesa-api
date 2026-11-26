@@ -14,8 +14,10 @@ from hasesa_api.models import AuthCode, AuthRequest, AuthSession, OAuthClient
 AUTH_REQUEST_TTL = timedelta(minutes=10)
 AUTH_CODE_TTL = timedelta(seconds=60)
 # A refresh that repeats the previous generation this soon after a rotation is
-# treated as a parallel duplicate, not as a stolen token.
-REFRESH_GRACE = timedelta(seconds=60)
+# treated as a duplicate (parallel requests, or a client that never received
+# the rotated token because its request timed out or the tab closed), not as a
+# stolen token. Older generations always end the session.
+REFRESH_GRACE = timedelta(minutes=10)
 
 _WILDCARD_PART = re.compile(r"[a-z0-9-]+")
 
@@ -35,11 +37,15 @@ def _now() -> datetime:
 # ---------- clients ----------
 
 
-def redirect_allowed(client: OAuthClient, uri: str) -> bool:
+def redirect_allowed(client: OAuthClient, uri: str, *, wildcards: bool = True) -> bool:
+    """Whether `uri` is registered for the client. With wildcards=False only exact entries count:
+    a pattern like ai-edu-*-w-yidnes-projects.vercel.app can be matched by anyone's Vercel project name."""
     for allowed in client.redirect_uris:
         if "*" not in allowed:
             if uri == allowed:
                 return True
+            continue
+        if not wildcards:
             continue
         prefix, _, suffix = allowed.partition("*")
         if (
@@ -225,6 +231,17 @@ async def revoke_all_sessions(db: AsyncSession, user_id: str) -> None:
         .where(AuthSession.user_id == user_id, AuthSession.revoked_at.is_(None))
         .values(revoked_at=_now())
     )
+
+
+async def purge_expired(db: AsyncSession) -> int:
+    """Delete sessions that ended over a week ago, and stale sign-in requests and codes. The caller commits."""
+    week_ago = _now() - timedelta(days=7)
+    res = await db.execute(
+        delete(AuthSession).where((AuthSession.expires_at < week_ago) | (AuthSession.revoked_at < week_ago))
+    )
+    await db.execute(delete(AuthRequest).where(AuthRequest.expires_at < _now()))
+    await db.execute(delete(AuthCode).where(AuthCode.expires_at < _now() - timedelta(days=1)))
+    return res.rowcount
 
 
 async def session_active(db: AsyncSession, session_id: str) -> bool:

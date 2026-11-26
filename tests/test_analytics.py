@@ -111,7 +111,7 @@ async def test_cleanup_needs_the_cron_secret_and_deletes_only_old_messages(api, 
         await s.commit()
 
     r = await api.get("/v1/internal/cleanup", headers={"authorization": "Bearer cron-secret"})
-    assert r.json() == {"messagesDeleted": 2, "conversationsDeleted": 1}
+    assert r.json() == {"messagesDeleted": 2, "conversationsDeleted": 1, "sessionsDeleted": 0}
     async with db.get_sessionmaker()() as s:
         assert (await s.scalars(select(Message.id))).all() == ["k-old"]
         assert (await s.scalars(select(Conversation.id))).all() == ["c-k"]

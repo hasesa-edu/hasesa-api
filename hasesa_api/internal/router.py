@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from hasesa_api.config import get_settings
 from hasesa_api.db import DbDep
+from hasesa_api.identity import sessions
 from hasesa_api.schemas import ApiModel
 
 log = logging.getLogger(__name__)
@@ -47,13 +48,16 @@ where not exists (select 1 from messages m where m.conversation_id = c.id)
 class CleanupOut(ApiModel):
     messages_deleted: int
     conversations_deleted: int
+    sessions_deleted: int
 
 
 @router.get("/cleanup")
 async def cleanup(db: DbDep) -> CleanupOut:
-    """Daily: delete chat messages past their retention, then empty conversations."""
+    """Daily: delete chat messages past their retention, then empty conversations,
+    then sign-in sessions that ended over a week ago."""
     messages = (await db.execute(_OLD_MESSAGES)).rowcount
     conversations = (await db.execute(_EMPTY_CONVERSATIONS)).rowcount
+    old_sessions = await sessions.purge_expired(db)
     await db.commit()
-    log.info("cleanup: %s messages, %s conversations deleted", messages, conversations)
-    return CleanupOut(messages_deleted=messages, conversations_deleted=conversations)
+    log.info("cleanup: %s messages, %s conversations, %s sessions deleted", messages, conversations, old_sessions)
+    return CleanupOut(messages_deleted=messages, conversations_deleted=conversations, sessions_deleted=old_sessions)
