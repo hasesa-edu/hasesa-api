@@ -3,6 +3,7 @@ title: The one-minute test
 kind: finish
 minutes: 25
 units: [frequency-and-period, graphs-and-relationships]
+video: { youtubeId: "glEJwXVDPi0", credit: "Recap On Tap" }
 summary: "Race your pendulum against a phone stopwatch for a full minute, answer the mystery, and predict the length of a clock that ticks every 2 seconds."
 ---
 ## Do: the one-minute test (10 minutes)

@@ -3,6 +3,7 @@ title: Lift the sack
 kind: build
 minutes: 45
 units: [levers-and-moments, forces-and-motion]
+video: { youtubeId: "p7QS4cz-Avs", credit: "Cognito" }
 summary: "Build a plank-and-brick lever, use the law of the lever to predict the pull needed to lift 15 kg of sand, then measure it with a luggage scale."
 ---
 ## Do: build the lever (10 minutes)

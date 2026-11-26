@@ -3,6 +3,7 @@ title: Current makes magnets
 kind: investigate
 minutes: 35
 units: [electromagnetism, charge-current-voltage]
+video: { youtubeId: "RwilgsQ9xaM", credit: "National MagLab" }
 summary: "Build a two-minute battery motor, make a compass swing with a wire, and make an electromagnet from a nail to find out what a current does near a magnet."
 ---
 ## Do: the fastest motor in the world (5 minutes)

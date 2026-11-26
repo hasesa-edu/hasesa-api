@@ -8,6 +8,7 @@ hook: "A steel bolt drops to the bottom of a bowl of water. Yet steel ships sail
 goal: "Find out why things float, measure the water a floating object pushes aside, then design a foil boat, predict how many coins it can carry, and test your prediction."
 whatYouBuild: "A boat folded from one 20 cm × 20 cm sheet of aluminium foil, designed to carry as many coins as possible, with a written prediction of its maximum load."
 hours: 2
+trailer: { youtubeId: "Z3vgsp4vKQs", credit: "Casual Navigation" }
 status: ai-draft
 publicSample: density
 materials:

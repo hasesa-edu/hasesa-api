@@ -3,6 +3,7 @@ title: The cooling curve
 kind: finish
 minutes: 25
 units: [graphs-and-relationships, heat-transfer]
+video: { youtubeId: "ORSZdpbxPHg", credit: "LabInApp" }
 summary: "Plot cooling curves for your control and insulated cups on one graph, compare every team's design, and explain how a thermos keeps heat in."
 ---
 ## Theory: graphs

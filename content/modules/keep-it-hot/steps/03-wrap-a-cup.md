@@ -3,6 +3,7 @@ title: Wrap a cup
 kind: build
 minutes: 45
 units: [fair-tests]
+video: { youtubeId: "bSAc9SaX69o", credit: "STEM Whizz" }
 summary: "Design insulation for a cup of hot water from cloth, newspaper, foil, cotton and straw, then race it against a bare control cup for 30 minutes."
 ---
 ## Theory: a fair test

@@ -7,6 +7,7 @@ hook: "A 15 kg sack of sand, a plank and a brick. The smallest person in the roo
 goal: "Discover the law of the lever with a ruler and coins, use it to predict the force needed to lift a sack of sand with a plank, test your prediction with a scale, and explain the levers you use every day."
 whatYouBuild: "A plank-and-brick lever that lifts a 15 kg sack of sand with a pull of a few kilograms, with the distances marked on it, and a table comparing your predicted and measured forces."
 hours: 2
+trailer: { youtubeId: "YlYEi0PgG1g", credit: "TED-Ed" }
 status: ai-draft
 publicSample: levers-and-moments
 materials:

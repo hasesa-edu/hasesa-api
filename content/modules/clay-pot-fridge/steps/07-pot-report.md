@@ -3,6 +3,7 @@ title: Pot report
 kind: finish
 minutes: 45
 units: []
+video: { youtubeId: "Uend3gNvfOw", credit: "Eric Verploegen" }
 summary: "Show your zeer working, solve the mystery from step 1, and recommend where in Ethiopia a clay pot fridge is most worth having."
 ---
 ## Show it working (10 minutes)

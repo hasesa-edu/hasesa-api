@@ -3,6 +3,7 @@ title: How tall is it?
 kind: finish
 minutes: 25
 units: [light-and-images, rearranging-formulas]
+video: { youtubeId: "1jhg-AN6AYQ", credit: "Ms Shaws Math Class" }
 summary: "Rearrange the similar-triangles formula, use your camera and a tape measure to find the height of a tree, flagpole or building, and check it a second way."
 ---
 ## Theory: rearranging formulas

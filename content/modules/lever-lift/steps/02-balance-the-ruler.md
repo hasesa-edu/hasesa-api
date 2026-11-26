@@ -3,6 +3,7 @@ title: Balance the ruler
 kind: investigate
 minutes: 35
 units: [levers-and-moments]
+video: { youtubeId: "22VGQM1jCn8", credit: "FuseSchool - Global Education" }
 summary: "Balance coins on a ruler resting on a pencil and discover the simple rule that balances every lever."
 ---
 ## Do: balance coins (15 minutes)

@@ -3,6 +3,7 @@ title: Build the motor
 kind: build
 minutes: 45
 units: [electromagnetism, charge-current-voltage]
+video: { youtubeId: "WI0pGk0MMhg", credit: "Science Buddies" }
 summary: "Wind a coil of enamelled wire, scrape one leg fully and the other only halfway, set it on paper-clip supports over a magnet, and get it spinning."
 ---
 ## Do: wind the coil (8 minutes)

@@ -3,6 +3,7 @@ title: Steel that floats
 kind: hook
 minutes: 15
 units: [density]
+video: { youtubeId: "mt5Mjti89TQ", credit: "Science Max - Scholastic" }
 summary: "Watch a steel bolt and a foil ball sink, then a foil boat float with coins inside. Predict why and list your questions."
 ---
 ## Watch

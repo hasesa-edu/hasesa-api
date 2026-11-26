@@ -3,6 +3,7 @@ title: The ticking padlock
 kind: hook
 minutes: 15
 units: [frequency-and-period]
+video: { youtubeId: "V1lHo8lGhWg", credit: "Glen Bull" }
 summary: "Watch a padlock on a string keep time with a phone, then predict what decides how fast a pendulum swings."
 ---
 ## Watch

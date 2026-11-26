@@ -3,6 +3,7 @@ title: A picture from a hole
 kind: hook
 minutes: 15
 units: [light-and-images]
+video: { youtubeId: "hsXo4gD7iWI", credit: "George Eastman Museum" }
 summary: "Learn the safety rules, sit in a blacked-out room with one tiny hole, and watch an upside-down picture of the outside appear on the wall."
 ---
 ## The rules first

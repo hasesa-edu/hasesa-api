@@ -3,6 +3,7 @@ title: Faster, and why
 kind: finish
 minutes: 25
 units: [electromagnetism, charge-current-voltage, electromagnetic-induction]
+video: { youtubeId: "1AaUK6pT_cE", credit: "The Engineering Mindset" }
 summary: "Make your motor faster one change at a time, work out the push on the coil and the energy turned into heat, turn a motor into a generator, and explain your motor."
 ---
 ## Do: the speed challenge (8 minutes)

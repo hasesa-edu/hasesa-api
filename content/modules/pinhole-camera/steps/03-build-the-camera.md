@@ -3,6 +3,7 @@ title: Build the camera
 kind: build
 minutes: 45
 units: [light-and-images]
+video: { youtubeId: "CDm1Mpixjuw", credit: "The Royal Institution" }
 summary: "Build a sliding-tube pinhole camera with a foil pinhole and a tracing-paper screen, then test how hole size and camera length change the picture."
 ---
 ## Do: build the tubes (20 minutes)

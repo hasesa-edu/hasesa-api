@@ -3,6 +3,7 @@ title: Rain on the wall
 kind: investigate
 minutes: 75
 units: [graphs-and-relationships, properties-of-matter]
+video: { youtubeId: "2NnKjoUCj4M", credit: "KANEA KASA KONSULTANTS" }
 summary: "Drip water onto your bricks like kiremt rain and measure the pits it digs, dunk broken pieces in water, then turn the class results into graphs."
 ---
 ## The question (5 minutes)

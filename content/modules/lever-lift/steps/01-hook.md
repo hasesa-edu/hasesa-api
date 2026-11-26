@@ -3,6 +3,7 @@ title: Two fingers and a plank
 kind: hook
 minutes: 15
 units: [forces-and-motion]
+video: { youtubeId: "6ZpgUq8xnXc", credit: "Understanding STEM" }
 summary: "Learn the plank rules, watch the smallest student lift a 15 kg sack of sand with two fingers, and predict how it works."
 ---
 ## The plank rules first
