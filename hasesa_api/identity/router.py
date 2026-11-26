@@ -9,6 +9,7 @@ from fastapi import APIRouter, Cookie, Header, HTTPException, Query, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
+from hasesa_api import limits
 from hasesa_api.config import get_settings
 from hasesa_api.db import DbDep
 from hasesa_api.identity import google, sessions, tokens
@@ -222,6 +223,13 @@ async def google_id_token(
         except EmailTakenError as e:
             await db.rollback()
             raise sessions.AuthError("taken", "this email belongs to another Google account") from e
+        if await limits.sign_ins_last_hour(db, user_id) >= limits.SIGN_INS_PER_HOUR:
+            await db.rollback()
+            return JSONResponse(  # type: ignore[return-value]
+                {"error": "slow_down", "error_description": "Too many sign-ins. Try again later."},
+                status_code=429,
+                headers={"Retry-After": "3600"},
+            )
         tokens_ = await sessions.create_session(db, user_id=user_id, client=client, user_agent=user_agent)
         await db.commit()
         return _token_response(tokens_, is_new_user=is_new)

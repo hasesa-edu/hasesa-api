@@ -21,15 +21,17 @@ DAYS = 30
 # Chapa checkouts use this prefix; webhooks for anything else are ignored.
 TX_PREFIX = "hl-"
 
-# Marks a pending payment paid and adds its days to the student's enrolment in
-# one statement. The status = 'pending' guard makes it idempotent, so the
-# return page, the callback and the webhook can all call it safely.
+# Marks a payment paid and adds its days to the student's enrolment in one
+# statement. The status guard makes it idempotent, so the return page, the
+# callback and the webhook can all call it safely. A payment Chapa once
+# reported as failed can still be claimed: if the student retried on the same
+# checkout and Chapa's verify call now says success, they paid.
 _CLAIM_AND_EXTEND = text(
     """
     WITH claimed AS (
       UPDATE payments
       SET status = 'success', verified_at = now(), chapa_ref = :chapa_ref
-      WHERE tx_ref = :tx_ref AND status = 'pending'
+      WHERE tx_ref = :tx_ref AND status IN ('pending', 'failed')
       RETURNING user_id, days
     )
     UPDATE users u
@@ -115,6 +117,7 @@ async def verify_and_apply(db: AsyncSession, tx_ref: str) -> ApplyResult:
     if tx is None or tx.status == "pending":
         return ApplyResult("pending")
     pending = (Payment.tx_ref == tx_ref, Payment.status == "pending")
+    unclaimed = (Payment.tx_ref == tx_ref, Payment.status.in_(("pending", "failed")))
     if tx.status == "failed":
         await db.execute(update(Payment).where(*pending).values(status="failed", verified_at=datetime.now(UTC)))
         await db.commit()
@@ -123,7 +126,7 @@ async def verify_and_apply(db: AsyncSession, tx_ref: str) -> ApplyResult:
         log.error("chapa amount mismatch for %s: got %s %s", tx_ref, tx.amount, tx.currency)
         await db.execute(
             update(Payment)
-            .where(*pending)
+            .where(*unclaimed)
             .values(
                 status="review",
                 verified_at=datetime.now(UTC),

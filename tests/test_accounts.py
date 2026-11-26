@@ -378,3 +378,45 @@ async def test_signed_out_session_cannot_open_steps(api, fake_google) -> None:
     await api.post("/v1/auth/logout", json={"refresh_token": t["refresh_token"]})
     m = get_content().modules[0]
     assert (await api.get(f"/v1/modules/{m.id}/steps/{m.steps[0].id}", headers=bearer(t))).status_code == 401
+
+
+async def test_refresh_whose_answer_was_lost_still_works_within_the_grace(api, fake_google) -> None:
+    """The website timed out (or the tab closed) after the API rotated: the old token still works for a while."""
+    fake_google["tok"] = profile()
+    t = await sign_in(api, "tok")
+    r1 = (await refresh(api, t["refresh_token"])).json()
+    async with db.get_sessionmaker()() as s:
+        await s.execute(
+            update(AuthSession)
+            .where(AuthSession.id == t["session_id"])
+            .values(rotated_at=datetime.now(UTC) - timedelta(minutes=5))
+        )
+        await s.commit()
+    again = await refresh(api, t["refresh_token"])
+    assert again.status_code == 200 and again.json()["refresh_token"] == r1["refresh_token"]
+
+
+async def test_mobile_sign_ins_are_rate_limited(api, fake_google, monkeypatch) -> None:
+    from hasesa_api import limits
+
+    monkeypatch.setattr(limits, "SIGN_INS_PER_HOUR", 2)
+    fake_google["id-tok"] = profile()
+    body = {"client_id": "hasesa-mobile", "id_token": "id-tok"}
+    for _ in range(2):
+        assert (await api.post("/v1/auth/google/id-token", json=body)).status_code == 200
+    r = await api.post("/v1/auth/google/id-token", json=body)
+    assert (r.status_code, r.json()["error"]) == (429, "slow_down")
+
+
+async def test_old_sessions_are_purged(api, fake_google) -> None:
+    fake_google["tok"] = profile()
+    old, live = await sign_in(api, "tok"), await sign_in(api, "tok")
+    async with db.get_sessionmaker()() as s:
+        await s.execute(
+            update(AuthSession)
+            .where(AuthSession.id == old["session_id"])
+            .values(revoked_at=datetime.now(UTC) - timedelta(days=8))
+        )
+        assert await sessions.purge_expired(s) == 1
+        await s.commit()
+        assert (await s.scalars(select(AuthSession.id))).all() == [live["session_id"]]

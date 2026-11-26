@@ -11,6 +11,7 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import Field
 
+from hasesa_api import limits
 from hasesa_api.access import access_level, has_full_access
 from hasesa_api.content.loader import get_content
 from hasesa_api.content.models import Concept
@@ -224,6 +225,8 @@ async def attempt(body: AttemptIn, user: OptionalUserDep, db: DbDep) -> AttemptO
         raise HTTPException(status_code=400, detail="Unknown question")
     if not body.answer.strip() or len(body.answer) > service.MAX_ANSWER:
         raise HTTPException(status_code=400, detail="Enter an answer")
+    if user:
+        await limits.check_answers(db, user.id)
     correct = is_correct(problem, body.answer)
     unit = await service.record_attempt(db, user.id, concept, problem, body.answer, correct) if user else None
     return AttemptOut(
@@ -235,6 +238,8 @@ async def attempt(body: AttemptIn, user: OptionalUserDep, db: DbDep) -> AttemptO
 async def test_out(body: TestOutIn, user: OptionalUserDep, db: DbDep) -> TestOutOut:
     """Grade a whole unit at once. Passing (80%) marks the unit tested out."""
     concept = _unit_for(body.unit_id, user)
+    if user:
+        await limits.check_answers(db, user.id, adding=len(concept.problems))
     r = await service.grade_test_out(db, user.id if user else None, concept, body.answers)
     return TestOutOut(
         score=r.score,

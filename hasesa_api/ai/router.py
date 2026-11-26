@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
+import anyio
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.sse import EventSourceResponse, ServerSentEvent
@@ -113,6 +114,7 @@ async def start_turn(body: ChatIn, user: CurrentUserDep, db: DbDep) -> Turn:
         )
 
     now = datetime.now(UTC)
+    new_conversation = conversation_id is None
     if conversation_id is None:
         conversation_id = str(uuid.uuid4())
         db.add(Conversation(id=conversation_id, user_id=user.id, lesson_id=context))
@@ -123,10 +125,9 @@ async def start_turn(body: ChatIn, user: CurrentUserDep, db: DbDep) -> Turn:
             .values(updated_at=now)
         )
     last_user = next((m for m in reversed(messages) if m["role"] == "user"), None)
+    question_id = str(uuid.uuid4())
     if last_user:
-        db.add(
-            Message(id=str(uuid.uuid4()), conversation_id=conversation_id, role="user", content=last_user["content"])
-        )
+        db.add(Message(id=question_id, conversation_id=conversation_id, role="user", content=last_user["content"]))
     await db.commit()
 
     student = None
@@ -138,7 +139,12 @@ async def start_turn(body: ChatIn, user: CurrentUserDep, db: DbDep) -> Turn:
     try:
         stream = await provider.open_stream(build_system_prompt(context, student), messages)
     except provider.ProviderUnavailable as e:
-        # The student got no answer, so don't count it against today's messages.
+        # The student got no answer: don't count it against today's messages, and
+        # don't keep the unanswered question (they'll send it again).
+        await db.execute(delete(Message).where(Message.id == question_id))
+        if new_conversation:
+            await db.execute(delete(Conversation).where(Conversation.id == conversation_id))
+        await db.commit()
         await usage.refund(db, user.id)
         raise HTTPException(
             status_code=502, detail="The lab assistant is temporarily unavailable. Please try again."
@@ -166,12 +172,15 @@ async def chat(turn: Annotated[Turn, Depends(start_turn)]) -> AsyncIterable[Serv
         log.error("AI provider stream broke: %s", e)
         failed = True
     finally:
-        await turn.stream.close()
-    if answer:
-        try:
-            await _save_answer(turn.conversation_id, "".join(answer))
-        except Exception:  # noqa: BLE001  # the student already has the answer
-            log.exception("saving the assistant's answer failed")
+        # Shielded: if the student's connection dropped, this still closes the
+        # provider stream and keeps the part of the answer they already saw.
+        with anyio.CancelScope(shield=True):
+            await turn.stream.close()
+            if answer:
+                try:
+                    await _save_answer(turn.conversation_id, "".join(answer))
+                except Exception:  # noqa: BLE001  # the student already has the answer
+                    log.exception("saving the assistant's answer failed")
     if failed:
         yield ServerSentEvent(event="error", data={"error": "The lab assistant stopped answering. Please try again."})
     else:

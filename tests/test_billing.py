@@ -186,3 +186,42 @@ async def test_signed_webhook_and_callback_apply_the_payment_once(api, fake_goog
         "/v1/billing/chapa/webhook", content=other, headers={"x-chapa-signature": _sig("hook-secret", other)}
     )
     assert r.json()["ignored"] is True
+
+
+@pytest.mark.anyio
+async def test_payment_reported_failed_then_paid_is_still_applied(api, fake_google, fake_chapa) -> None:
+    txs, _ = fake_chapa
+    t = await student(api, fake_google, paid_until=None)
+    tx = (await start(api, t))["txRef"]
+    txs[tx] = chapa.VerifiedTx("failed", 300, "ETB", None)
+    assert (await api.get(f"/v1/billing/payments/{tx}", headers=bearer(t))).json()["state"] == "failed"
+    # The student tried again on the same checkout, and it went through.
+    txs[tx] = chapa.VerifiedTx("success", 300, "ETB", "CH-9")
+    body = (await api.get(f"/v1/billing/payments/{tx}", headers=bearer(t))).json()
+    assert body["state"] == "paid" and body["paidUntil"] is not None
+    async with db.get_sessionmaker()() as s:
+        assert (await s.get(Payment, tx)).status == "success"
+
+
+@pytest.mark.anyio
+async def test_production_only_returns_to_exact_addresses(api, fake_google, fake_chapa, monkeypatch) -> None:
+    t = await student(api, fake_google)
+    preview = "https://ai-edu-x-w-yidnes-projects.vercel.app/billing/return"
+    assert (await api.post("/v1/billing/checkout", json={"returnUrl": preview}, headers=bearer(t))).status_code == 200
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    config.get_settings.cache_clear()
+    r = await api.post("/v1/billing/checkout", json={"returnUrl": preview}, headers=bearer(t))
+    assert r.status_code == 400
+    await start(api, t)  # www.hasesa.com is still fine
+
+
+@pytest.mark.anyio
+async def test_checkouts_are_rate_limited_per_student(api, fake_google, fake_chapa, monkeypatch) -> None:
+    from hasesa_api import limits
+
+    monkeypatch.setattr(limits, "CHECKOUTS_PER_10_MIN", 2)
+    t = await student(api, fake_google)
+    await start(api, t)
+    await start(api, t)
+    r = await api.post("/v1/billing/checkout", json={"returnUrl": RETURN}, headers=bearer(t))
+    assert r.status_code == 429 and r.headers["retry-after"] == "600"

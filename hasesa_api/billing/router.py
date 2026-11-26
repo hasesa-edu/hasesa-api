@@ -14,6 +14,7 @@ from urllib.parse import urlencode, urlsplit
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import Field
 
+from hasesa_api import limits
 from hasesa_api.billing import chapa, payments
 from hasesa_api.config import get_settings
 from hasesa_api.db import DbDep
@@ -51,7 +52,9 @@ class WebhookOut(ApiModel):
 
 
 async def _check_return_url(db: DbDep, client_id: str, url: str) -> None:
-    """Same allowlist as sign-in: the origin must be one the client may sign in from."""
+    """Same allowlist as sign-in: the origin must be one the client may sign in from.
+    The production API only takes exact entries (www.hasesa.com), not the preview
+    pattern, which someone else's Vercel project name could match."""
     parts = urlsplit(url)
     origin = f"{parts.scheme}://{parts.netloc}"
     client = await sessions.get_client(db, client_id)
@@ -59,7 +62,9 @@ async def _check_return_url(db: DbDep, client_id: str, url: str) -> None:
         parts.path != RETURN_PATH
         or parts.query
         or parts.fragment
-        or not sessions.redirect_allowed(client, f"{origin}/api/auth/callback")
+        or not sessions.redirect_allowed(
+            client, f"{origin}/api/auth/callback", wildcards=get_settings().vercel_env != "production"
+        )
     ):
         raise HTTPException(status_code=400, detail="This return address isn't allowed.")
 
@@ -68,6 +73,7 @@ async def _check_return_url(db: DbDep, client_id: str, url: str) -> None:
 async def checkout(body: CheckoutIn, user: CurrentUserDep, claims: ClaimsDep, db: DbDep) -> CheckoutOut:
     """Start a Chapa checkout for one 30-day pass. Send the student to checkoutUrl."""
     await _check_return_url(db, claims.client_id, body.return_url)
+    await limits.check_checkouts(db, user.id)
     tx_ref = await payments.create_pending_payment(db, user.id)
     first, _, rest = user.display_name.strip().partition(" ")
     try:

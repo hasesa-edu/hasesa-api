@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 
 import httpx
 import pytest
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 
 from hasesa_api import db
 from hasesa_api.ai import context as ctx
 from hasesa_api.ai import provider, usage
 from hasesa_api.ai.prompt import build_system_prompt
 from hasesa_api.content.loader import get_content
-from hasesa_api.models import Message, Usage, User
+from hasesa_api.models import Conversation, Message, Usage, User
 from tests.test_accounts import bearer, profile, sign_in
 
 # ---------- pure parts ----------
@@ -193,6 +193,9 @@ async def test_provider_down_refunds_the_message(api, fake_google, fake_ai) -> N
     )
     async with db.get_sessionmaker()() as s:
         assert await s.scalar(select(Usage.chat_turns)) == 0
+        # No unanswered question or empty conversation is left behind.
+        assert await s.scalar(select(func.count()).select_from(Message)) == 0
+        assert await s.scalar(select(func.count()).select_from(Conversation)) == 0
 
 
 @pytest.mark.anyio

@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     # Only sent when set, since non-reasoning models reject it.
     ai_reasoning_effort: str = ""
 
+    # Set by Vercel: "production", "preview" or "development". Empty elsewhere.
+    vercel_env: str = ""
+
     # ---- Scheduled jobs ----
     # Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" to the job endpoints.
     cron_secret: str = ""

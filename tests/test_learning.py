@@ -280,3 +280,18 @@ async def test_feedback_read_only_touches_the_students_own_notes(api, fake_googl
     theirs = (await api.get("/v1/me/progress", headers=bearer(other))).json()["feedback"]
     assert mine[0]["readAt"] is not None
     assert theirs[0]["readAt"] is None
+
+
+async def test_saved_answers_are_rate_limited(api, fake_google, monkeypatch) -> None:
+    from hasesa_api import limits
+
+    monkeypatch.setattr(limits, "ANSWERS_PER_MINUTE", 2)
+    t = await student(api, fake_google)
+    c = public_unit()
+    p = c.problems[0]
+    body = {"unitId": c.id, "questionId": p.id, "answer": right(p)}
+    for _ in range(2):
+        assert (await api.post("/v1/attempts", json=body, headers=bearer(t))).status_code == 200
+    assert (await api.post("/v1/attempts", json=body, headers=bearer(t))).status_code == 429
+    # Signed out, nothing is saved, so nothing is counted.
+    assert (await api.post("/v1/attempts", json=body)).status_code == 200
